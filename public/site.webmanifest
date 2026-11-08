@@ -1,0 +1,11 @@
+{
+  "name": "AI Markdown Cleaner",
+  "short_name": "Markdown Cleaner",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f6f8fb",
+  "theme_color": "#f6f8fb",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
