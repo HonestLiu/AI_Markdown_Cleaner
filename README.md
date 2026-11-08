@@ -100,7 +100,9 @@ const result = cleanMarkdown(input, defaultOptions);
 5. Cloudflare 安装依赖后构建；必须先确认本地类型检查、完整测试及构建通过，再发布。
 6. `public/_headers` 会自动进入 dist 并应用安全响应头。
 
-也可以在已安装 Wrangler 的联网环境使用 `npx wrangler pages deploy dist --project-name ai-markdown-cleaner`。`wrangler.toml` 配置静态产物目录。开发服务器使用 Vite 自己的响应头，不应用 Pages 的生产 CSP。
+若使用 Pages 的 Git 集成，填写构建命令 `npm run build` 和产物目录 `dist`，让 Pages 在构建后自动发布；不要再配置 `npx wrangler deploy` 作为部署命令。若使用手动上传 / Wrangler 发布，构建后执行 `npm run deploy:pages`，该脚本会调用 `wrangler pages deploy dist --project-name ai-markdown-cleaner`。
+
+`wrangler.toml` 配置 Pages 静态产物目录。开发服务器使用 Vite 自己的响应头，不应用 Pages 的生产 CSP。
 
 ## 目录
 
