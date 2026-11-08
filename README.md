@@ -93,16 +93,13 @@ const result = cleanMarkdown(input, defaultOptions);
 
 静态输出无需 Functions、数据库、R2 或服务器。
 
-1. 将项目上传至 Git 仓库，在 Cloudflare Pages 中连接仓库。
-2. Framework preset 选择 Vite，根目录为本项目目录。
-3. Build command：`npm run build`；Output directory：`dist`。
-4. 设置环境变量 `NODE_VERSION=22`，按需设置 `VITE_GITHUB_URL`。
-5. Cloudflare 安装依赖后构建；必须先确认本地类型检查、完整测试及构建通过，再发布。
-6. `public/_headers` 会自动进入 dist 并应用安全响应头。
+1. 在 Cloudflare **Workers & Pages → Create application → Pages → Connect to Git** 连接 GitHub 仓库。选择 Pages 项目类型，不要选 Workers Builds。
+2. Framework preset 选 Vite，根目录留空（项目在仓库根目录时），Build command 填 `npm run build`，Build output directory 填 `dist`。
+3. 添加环境变量 `NODE_VERSION=22`；按需添加 `VITE_GITHUB_URL`。
+4. 保存并部署。以后推送到 GitHub 时，Cloudflare Pages 会自动构建并发布；此流程不需要在仓库里配置 Wrangler API Token 或自定义 Deploy command。
+5. `public/_headers` 会随构建产物进入 `dist`，由 Pages 提供安全响应头。
 
-若使用 Pages 的 Git 集成，填写构建命令 `npm run build` 和产物目录 `dist`，让 Pages 在构建后自动发布；不要再配置 `npx wrangler deploy` 作为部署命令。若使用手动上传 / Wrangler 发布，构建后执行 `npm run deploy:pages`，该脚本会调用 `wrangler pages deploy dist --project-name ai-markdown-cleaner`。
-
-`wrangler.toml` 配置 Pages 静态产物目录。开发服务器使用 Vite 自己的响应头，不应用 Pages 的生产 CSP。
+本仓库是静态 Pages 项目，`wrangler.toml` 中的 `pages_build_output_dir` 用于标识 Pages 构建目录。开发服务器使用 Vite 自己的响应头，不应用 Pages 的生产 CSP。Wrangler 手动上传需要 API Token，不属于 Git 集成部署流程。
 
 ## 目录
 
