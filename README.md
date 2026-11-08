@@ -89,7 +89,26 @@ const result = cleanMarkdown(input, defaultOptions);
 
 请在联网环境执行上述全部命令。依赖可用后，应提交生成的 package-lock.json，并改用 npm ci 获得可重复安装。
 
-## Cloudflare Pages
+## Cloudflare Workers（默认）
+
+默认 `wrangler.toml` 使用 Workers Static Assets 托管 `dist/`，支持构建平台默认的 `npx wrangler deploy`，不需要 Worker 脚本入口。
+
+在 Cloudflare Workers 的 Git 构建设置中填写：
+
+- Build command：`npm run build`
+- Deploy command：`npx wrangler deploy`
+- 根目录：仓库根目录
+- 环境变量：`NODE_VERSION=22`；按需添加 `VITE_GITHUB_URL`
+
+Worker 名称应与 `wrangler.toml` 的 `name` 一致（当前为 `ai-markdown-cleaner`）。本地手动发布先运行 `npm run build`，再运行 `npx wrangler deploy`，需要 Cloudflare 登录或 API Token。
+
+`public/_headers` 随构建复制到 `dist/`，Workers Static Assets 同样支持该响应头文件。
+
+如果日志出现 “run `wrangler deploy` on a Pages project” 和 “Missing entry-point”，说明 Pages 配置与 Workers 部署命令混用了。使用此默认配置部署 Workers；已有 Pages 项目则使用下面的独立配置。
+
+## Cloudflare Pages（可选）
+
+Pages Git 集成会读取默认 Wrangler 配置。使用 Pages 时，先将 `wrangler.pages.toml` 的内容替换到 `wrangler.toml`，再提交到 Pages 连接的分支。
 
 静态输出无需 Functions、数据库、R2 或服务器。
 
@@ -99,7 +118,7 @@ const result = cleanMarkdown(input, defaultOptions);
 4. 保存并部署。以后推送到 GitHub 时，Cloudflare Pages 会自动构建并发布；此流程不需要在仓库里配置 Wrangler API Token 或自定义 Deploy command。
 5. `public/_headers` 会随构建产物进入 `dist`，由 Pages 提供安全响应头。
 
-本仓库是静态 Pages 项目，`wrangler.toml` 中的 `pages_build_output_dir` 用于标识 Pages 构建目录。开发服务器使用 Vite 自己的响应头，不应用 Pages 的生产 CSP。Wrangler 手动上传需要 API Token，不属于 Git 集成部署流程。
+Pages 配置中的 `pages_build_output_dir` 用于标识构建目录，不能交给 `wrangler deploy`。手动上传 Pages 可运行 `npm run build` 后执行 `npx wrangler pages deploy --config wrangler.pages.toml`，需要 Cloudflare 登录或 API Token。开发服务器使用 Vite 自己的响应头，不应用生产 CSP。
 
 ## 目录
 
@@ -129,7 +148,8 @@ src/
 public/_headers
 vite.config.ts
 tsconfig.json
-wrangler.toml
+wrangler.toml                默认 Workers Static Assets 配置
+wrangler.pages.toml          可选 Pages 配置
 ```
 
 ## 兼容性限制
