@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { cleanMarkdown, defaultOptions } from '../lib/cleaner';
 import { renderPreview } from '../lib/preview';
 import { scenario } from './scenario';
-const clean = (s: string) => cleanMarkdown(s, defaultOptions).content;
+const clean = (s: string) => cleanMarkdown(s, { ...defaultOptions, numberHeadings: false }).content;
 const deep = (s: string) => cleanMarkdown(s, { ...defaultOptions, mode: 'deep', cleanHtml: true });
 describe('数学与代码保护', () => {
     it('转换行内 LaTeX', () => expect(clean(String.raw `中文 \(x^2+1\) 公式`)).toBe('中文 $x^2+1$ 公式'));
@@ -64,4 +64,88 @@ describe('幂等性、性能与安全', () => {
     it('恶意 HTML 不进入预览 DOM', () => { const html = renderPreview('<script>alert(1)</script>\n\n<img src=x onerror=alert(1)>\n\n[x](javascript:alert%281%29)'); const root = document.createElement('div'); root.innerHTML = html; expect(root.querySelector('script,[onerror],[onclick]')).toBeNull(); expect(root.querySelector('a')?.getAttribute('href') ?? '').not.toContain('javascript:'); });
     it('深度模式去掉脚本并记录', () => { const r = deep('<script>alert(1)</script>正文'); expect(r.content).toBe('正文'); expect(r.statistics.html).toBeGreaterThan(0); });
     it('预览支持 GFM 与 KaTeX', () => { const html = renderPreview('| A | B |\n| - | - |\n| 1 | 2 |\n\n$x^2$'); expect(html).toContain('<table>'); expect(html).toContain('katex'); });
+});
+
+
+describe('最高标题调整', () => {
+    const adjust = (s: string, level: 0 | 1 | 2 | 3 | 4 | 5 | 6) => cleanMarkdown(s, { ...defaultOptions, highestHeadingLevel: level, numberHeadings: false });
+    it('按全文最高标题整体升降，保留跳级及顺序', () => {
+        expect(adjust('#### 子节\n\n## 主标题\n\n### 节', 1).content).toBe('### 子节\n\n# 主标题\n\n## 节');
+        expect(adjust('# 主标题\n\n## 子节', 3).content).toBe('### 主标题\n\n#### 子节');
+    });
+    it('默认关闭且无标题不修改', () => {
+        expect(adjust('## 标题', 0).content).toBe('## 标题');
+        expect(adjust('正文', 2).content).toBe('正文');
+    });
+    it('超出 H6 降级为加粗表情序号并警告', () => {
+        const input = '# 主标题\n\n###### 最低标题';
+        const result = adjust(input, 2);
+        expect(result.content).toBe('## 主标题\n\n**1️⃣ 最低标题**');
+        expect(result.statistics.warnings).toBe(1);
+    });
+    it('保护代码、数学及 HTML 代码中的伪标题', () => {
+        const input = '## 真标题\n\n```md\n# 代码\n```\n\n<pre># 原样</pre>\n\n$$\n# 数学\n$$';
+        expect(adjust(input, 3).content).toBe(input.replace('## 真标题', '### 真标题'));
+    });
+    it('支持 Setext、引用、列表标题及行内代码', () => {
+        expect(adjust('主标题\n===\n\n> ## 引用 `代码`\n\n- ### 列表', 2).content).toBe('## 主标题\n\n> ### 引用 `代码`\n\n- #### 列表');
+    });
+    it('保留行内格式并且重复清洗幂等', () => {
+        const result = adjust('## **重点** [链接](https://example.com)\n\n#### 子标题', 3);
+        expect(result.content).toBe('### **重点** [链接](https://example.com)\n\n##### 子标题');
+        expect(adjust(result.content, 3).content).toBe(result.content);
+        expect(result.statistics.markdown).toBe(2);
+    });
+    it('独立于 Markdown 规范化开关', () => {
+        expect(cleanMarkdown('## 标题', { ...defaultOptions, normalizeMarkdown: false, numberHeadings: false, highestHeadingLevel: 1 }).content).toBe('# 标题');
+    });
+});
+
+
+describe('统一标题序号和超深标题', () => {
+    it('六级序号使用不同样式，括号统一半角', () => {
+        const input = '# 第一层\n\n## 第二层\n\n### 第三层\n\n#### 第四层\n\n##### 第五层\n\n###### 第六层';
+        const result = cleanMarkdown(input).content;
+        expect(result).toBe('# 一、 第一层\n\n## (一) 第二层\n\n### 1. 第三层\n\n#### (1) 第四层\n\n##### ① 第五层\n\n###### ❶ 第六层');
+        expect(cleanMarkdown(result).content).toBe(result);
+    });
+    it('移除不同原序号，遇到父标题重置子序号', () => {
+        expect(cleanMarkdown('# 三、 主章\n\n## （二） 子章\n\n## 2. 子章\n\n# 4. 另一章\n\n## 1️⃣ 子章').content).toBe('# 一、 主章\n\n## (一) 子章\n\n## (二) 子章\n\n# 二、 另一章\n\n## (一) 子章');
+    });
+    it('保护数字正文、代码、链接及公式', () => {
+        const input = '## 2026 年总结 `1. code` [文档](https://example.com/a__b) $x$\n\n```md\n# 一、 原样\n```';
+        expect(cleanMarkdown(input).content).toBe(input.replace('## 2026', '## (一) 2026'));
+    });
+    it('调整最高标题后再按最终层级编号', () => {
+        expect(cleanMarkdown('## 一、 主标题\n\n### ① 小节', { ...defaultOptions, highestHeadingLevel: 1 }).content).toBe('# 一、 主标题\n\n## (一) 小节');
+    });
+    it('H7 以下直接降级，支持连续超深标题与两位表情序号', () => {
+        const input = Array.from({ length: 11 }, (_, i) => '####### ' + (i + 1) + '. 小节').join('\n\n');
+        const result = cleanMarkdown(input);
+        expect(result.content).toContain('**1️⃣ 小节**');
+        expect(result.content).toContain('**1️⃣1️⃣ 小节**');
+        expect(result.statistics.warnings).toBe(11);
+        expect(cleanMarkdown(result.content).content).toBe(result.content);
+    });
+    it('超深加粗保留链接地址和代码内容', () => {
+        expect(cleanMarkdown('####### **重点** [链接](https://example.com/a__b) `__code__`').content).toBe('**1️⃣ 重点 [链接](https://example.com/a__b) `__code__`**');
+    });
+    it('编号可关闭，超过 H6 仍提示降级', () => {
+        expect(cleanMarkdown('## 二、 原序号', { ...defaultOptions, numberHeadings: false }).content).toBe('## 二、 原序号');
+        expect(cleanMarkdown('####### 二、 原序号', { ...defaultOptions, numberHeadings: false }).content).toBe('**1️⃣ 原序号**');
+    });
+});
+
+
+describe('中文句号选项', () => {
+    it('仅在选项开启时删除中文句号，保留其他标点', () => {
+        const input = '你好。你好！你好？句中。也删除。';
+        expect(cleanMarkdown(input).content).toBe(input);
+        expect(cleanMarkdown(input, { ...defaultOptions, removeChinesePeriod: true }).content).toBe('你好你好！你好？句中也删除');
+    });
+    it('记录每个被移除的句号', () => {
+        const result = cleanMarkdown('甲。乙。。', { ...defaultOptions, removeChinesePeriod: true });
+        expect(result.content).toBe('甲乙');
+        expect(result.changes.find(change => change.message.includes('中文句号'))?.count).toBe(3);
+    });
 });
