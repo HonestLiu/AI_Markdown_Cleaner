@@ -64,7 +64,7 @@ const result = cleanMarkdown(input, defaultOptions);
 
 预览不加载图片，包括外链图片，避免第三方资源请求暴露访问记录；源码中的合法图片路径保留。生产 CSP 进一步限制网络连接、远程图片、脚本、框架与对象。KaTeX 字体随 Vite 打包，不使用 CDN。
 
-支持常规 Markdown、GFM 与数学预览。Mermaid 显示代码；常见扩展语法会保留源码，网页预览专注于标准 Markdown、GFM 与数学公式。
+支持常规 Markdown、GFM、数学公式、Mermaid 图表与常见编程语言的代码高亮预览。Mermaid 在预览时延迟加载，使用严格安全模式并净化生成的 SVG；语法错误时显示提示并保留源码。GitHub 风格的 `[!NOTE]`、`[!TIP]`、`[!IMPORTANT]`、`[!WARNING]`、`[!CAUTION]` 提示块与 `==高亮==` 也会渲染为有样式的预览。
 
 安全预览不代表输出可以插入其他网站的 innerHTML；本工具导出的原始 Markdown 仍可能包含保留的复杂 HTML。
 
@@ -159,6 +159,6 @@ wrangler.pages.toml          可选 Pages 配置
 - 不恢复无 URL 的平台引用，未知平台格式保留提示；无法保证覆盖平台未来格式。
 - 不补齐具有歧义的代码围栏或公式，不自动修正列表层级或损坏表格。
 - 以通用 Markdown 阅读器为目标，不模拟各应用插件、公式宏和 Mermaid 版本。
-- 不把正常货币 dollar 文本猜成数学；损坏的 dollar 公式不自动修复。
+- 不把正常货币 dollar 文本猜成数学；损坏的 dollar 公式不自动修复。Mermaid 的渲染效果取决于其支持的语法和版本。
 - HTML 仅转换能够确定语义的子集，复杂元素及其内容保留原文，标准预览忽略原始 HTML。
 - 部分浏览器剪贴板 API 需要 HTTPS 或 localhost，并需要用户授权。
