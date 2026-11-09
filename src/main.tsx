@@ -1,6 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { getMessages, readLanguagePreference, resolveLocale } from './i18n';
 import './style.css';
 import 'katex/dist/katex.min.css';
+const locale = resolveLocale(readLanguagePreference());
+const messages = getMessages(locale);
+document.documentElement.lang = locale === 'zh' ? 'zh-CN' : 'en';
+document.title = messages.pageTitle;
+const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+if (description) description.content = messages.pageDescription;
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

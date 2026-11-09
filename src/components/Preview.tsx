@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { renderPreview, sanitizeMermaidSvg } from '../lib/preview';
+import { getMessages, type Locale } from '../i18n';
 import 'highlight.js/styles/github.css';
 const MAX_PREVIEW_CHARS = 150000;
-export function Preview({ content }: {
+export function Preview({ content, locale }: {
     content: string;
+    locale: Locale;
 }) {
+    const t = getMessages(locale);
     const root = useRef<HTMLElement>(null);
     const html = useMemo(() => { try {
         return content.length > MAX_PREVIEW_CHARS ? '' : renderPreview(content);
     }
     catch {
-        return '<p>预览失败，请查看 Markdown 源码。</p>';
+        return `<p>${t.previewFailed}</p>`;
     } }, [content]);
     useEffect(() => {
         const container = root.current;
@@ -42,14 +45,14 @@ export function Preview({ content }: {
                 } catch {
                     const message = document.createElement('p');
                     message.className = 'mermaid-error';
-                    message.textContent = '图表语法无法解析，已保留 Mermaid 源码。';
+                    message.textContent = t.diagramFailed;
                     code.closest('pre')?.after(message);
                 }
             }
         }).catch(() => undefined);
         return () => { cancelled = true; };
-    }, [content, html]);
+    }, [content, html, locale]);
     if (content.length > MAX_PREVIEW_CHARS)
-        return <div className="preview-note">文档超过 15 万字符，已暂停渲染预览以保持流畅。完整结果仍可复制和下载。</div>;
+        return <div className="preview-note">{t.previewTooLong}</div>;
     return <article className="prose" ref={root} dangerouslySetInnerHTML={{ __html: html }}/>;
 }
