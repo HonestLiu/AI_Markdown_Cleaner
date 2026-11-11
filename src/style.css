@@ -54,7 +54,6 @@
 .deep-options-intro span{flex:none;padding:5px 9px;border-radius:999px;background:color-mix(in srgb,var(--blue) 9%,var(--surface));color:var(--blue);font-size:10px;font-weight:600}
 @media(max-width:520px){.deep-options-intro p{font-size:14px}}
 .setting-group{margin-top:16px}.setting-group h3{margin:0;padding-bottom:6px;color:var(--muted);font-size:10px;font-weight:650;letter-spacing:.04em;text-transform:uppercase}.setting-group .setting{padding:10px 0}.setting>span{display:grid;gap:3px}.setting>span strong{font-size:12px;font-weight:550}.setting>span small{font-size:10px;color:var(--muted)}dialog>p:first-of-type{margin:10px 0 16px}
-.mermaid-diagram{max-width:100%;margin:18px 0;padding:14px;overflow:auto;border:1px solid var(--border);border-radius:9px;background:var(--surface);text-align:center}.mermaid-diagram svg{display:inline-block;max-width:100%;height:auto}.mermaid-error{margin:0 0 12px;color:#b77c20;font-size:11px}
 .prose mark.markdown-highlight{padding:.08em .24em;border-radius:.22em;background:#ffeb91;color:inherit;box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .prose .markdown-alert{margin:16px 0;padding:4px 14px 8px;border-left:3px solid #8b95a5;border-radius:5px;background:color-mix(in srgb,#8b95a5 8%,var(--surface));color:var(--text)}
 .prose .markdown-alert-title{margin:5px 0;font-weight:650;color:#68778d}
