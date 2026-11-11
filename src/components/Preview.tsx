@@ -22,7 +22,7 @@ export function Preview({ content, locale }: {
         const mermaidBlocks = [...container.querySelectorAll<HTMLElement>('pre code.language-mermaid')];
         const codeBlocks = [...container.querySelectorAll<HTMLElement>('pre code[class*="language-"]:not(.language-mermaid)')];
         if (!mermaidBlocks.length && !codeBlocks.length) return;
-        if (codeBlocks.length) void import('highlight.js/lib/common').then(({ default: hljs }) => {
+        if (codeBlocks.length) void import('../../node_modules/highlight.js/es/common.js').then(({ default: hljs }) => {
             if (cancelled) return;
             for (const code of codeBlocks) {
                 const language = code.className.match(/(?:^|\s)language-([\w+-]+)/)?.[1];
