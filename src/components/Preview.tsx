@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { renderPreview, sanitizeMermaidSvg } from '../lib/preview';
 import { getMessages, type Locale } from '../i18n';
-import 'highlight.js/styles/github.css';
+import '../../node_modules/highlight.js/styles/github.css';
 const MAX_PREVIEW_CHARS = 150000;
 export function Preview({ content, locale }: {
     content: string;
