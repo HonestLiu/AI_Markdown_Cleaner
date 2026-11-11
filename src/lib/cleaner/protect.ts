@@ -6,6 +6,7 @@ import math from 'remark-math';
 import type { Report } from './types';
 interface Node {
     type: string;
+    value?: string;
     children?: Node[];
     position?: {
         start: {
@@ -25,6 +26,8 @@ export function protect(input: string, report: Report, includeMath = false) {
     function walk(n: Node) {
         if ((n.type === 'code' || n.type === 'inlineCode' || (includeMath && (n.type === 'math' || n.type === 'inlineMath'))) && n.position) {
             const a = n.position.start.offset!, b = n.position.end.offset!;
+            const isIndentedMathBlock = n.type === 'code' && /^\\\[\s*\n[\s\S]*\n\s*\\\]$/.test(n.value ?? '');
+            if (isIndentedMathBlock) return;
             spans.push([a, b]);
             if (n.type === 'code') {
                 const text = input.slice(a, b), lines = text.split('\n');

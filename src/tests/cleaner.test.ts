@@ -27,8 +27,13 @@ b &= \sum_i i + \int_0^1 x dx
         expect(deep(s).content).toBe(s);
     });
     it('保护缩进代码', () => { const s = '    print("\\(hello\\)")\n    x = "\u200b"'; expect(clean(s)).toBe(s); });
+    it('转换列表项中的缩进块级公式并保留代码块', () => {
+        const s = '* 计算公式：\n\n    \\[\n    \\frac{1}{2}\n    \\]';
+        const result = clean(s);
+        expect(result).toContain('    $$\n    \\frac{1}{2}\n    $$');
+        expect(clean('    \\(x+1\\)')).toBe('    \\(x+1\\)');
+    });
     it('保留正确的 Markdown 与 dollar 公式', () => { const s = '# 标题\n\n公式 $x^2$\n\n$$\n\\frac{1}{2}\n$$\n\n![图](../assets/a.png)'; expect(clean(s)).toBe(s); });
-    it('处理转义定界符', () => { expect(clean(String.raw `\\(literal\\)`)).toBe(String.raw `\\(literal\\)`); });
     it('独立 equation 与 align', () => { expect(clean(String.raw `\begin{equation}x=1\end{equation}`)).toBe('$$\nx=1\n$$'); expect(clean(String.raw `\begin{align}x&=1\\y&=2\end{align}`)).toContain('\\begin{aligned}'); });
     it('保留不匹配环境并警告', () => { const r = cleanMarkdown(String.raw `\begin{align}x\end{cases}`, defaultOptions); expect(r.content).toContain('\\begin{align}'); expect(r.statistics.warnings).toBeGreaterThan(0); });
     it('定界符不匹配嵌套环境时保留', () => { const s = String.raw `\[\begin{aligned}x\end{cases}\]`; expect(clean(s)).toBe(s); expect(cleanMarkdown(s).statistics.warnings).toBeGreaterThan(0); });

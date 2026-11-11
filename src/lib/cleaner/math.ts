@@ -63,7 +63,8 @@ export function normalizeMath(text: string, report: Report): string {
             }
             const body = text.slice(i + width, end);
             const prefix = text.slice(text.lastIndexOf('\n', i - 1) + 1, i);
-            if (block && (/^\s*(?:>|[-+*]\s|\d+[.)]\s)/.test(prefix) || prefix.includes('|') || /^\s{2,}/.test(prefix))) {
+            const listIndent = /^ {1,4}$/.test(prefix) ? prefix : '';
+            if (block && (/^\s*(?:>|[-+*]\s|\d+[.)]\s)/.test(prefix) || prefix.includes('|') || (/^\s{2,}/.test(prefix) && !listIndent))) {
                 report('math', '容器或表格内的块公式需要人工确认，已保留原文', 1, true);
                 out += text.slice(i, end + close.length);
                 i = end + close.length;
@@ -75,7 +76,10 @@ export function normalizeMath(text: string, report: Report): string {
                 out += text.slice(i, end + close.length);
             }
             else {
-                out += block ? '\n$$\n' + body.trim() + '\n$$\n' : '$' + body.trim() + '$';
+                if (block && listIndent)
+                    out = out.slice(0, -listIndent.length);
+                const formula = body.trim().split('\n').map(line => listIndent + (listIndent ? line.trimStart() : line)).join('\n');
+                out += block ? '\n' + listIndent + '$$\n' + formula + '\n' + listIndent + '$$\n' : '$' + body.trim() + '$';
                 report('math', block ? '转换块级数学定界符' : '转换行内数学定界符');
             }
             i = end + close.length;
